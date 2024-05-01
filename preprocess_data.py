@@ -10,6 +10,19 @@ from loguru import logger
 from tqdm import tqdm
 from datasets import Dataset, DatasetDict
 from typing import List, Dict
+from transformers import AutoTokenizer
+from config import PRETRAINED_MODEL
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
+
+# Splitting based on token count in each chunk
+text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+    tokenizer,
+    chunk_size=MIN_CONTEXT_LENGTH,
+    chunk_overlap=0,
+    separators=["\n", "\t", "}", " "],
+)
 
 
 def get_clean_data(data: List[Dict[str, str]]) -> List[str]:
@@ -19,13 +32,11 @@ def get_clean_data(data: List[Dict[str, str]]) -> List[str]:
         code = sample["file_text"]
 
         # Regex to remove the copyright block as specified
-        copyright_pattern = (
-            r"/\*\n \* Copyright.*?\*/\n\n"
-        )
+        copyright_pattern = r"/\*\n \* Copyright.*?\*/"
         code = re.sub(copyright_pattern, "", code, flags=re.DOTALL)
         # I decided not to remove comments because they can be useful for context & desirable for code completion
 
-        if _is_long_sample(code):
+        if _is_long_sample(code) and not _contains_long_values(code):
             cleaned_data.append(code)
 
         else:  # if sample is short just don't save it
@@ -41,34 +52,29 @@ def _is_long_sample(text: str) -> bool:
     return True
 
 
+def _contains_long_values(text: str) -> bool:
+    # Pattern matches any sequence of digits longer than 40 or non-space characters longer than 100
+    pattern = re.compile(r"(\d{40,})|([^\s]{200,})")
+
+    if pattern.search(text):
+        return True  # If there's a match, we might want to skip this file
+    else:
+        return False  # No concerning long sequences found
+
+
 def chunk_text(data: List[str]) -> List[Dict[str, str]]:
     """Generate (context, target) pairs from the given dataset."""
-    # Not using word_tokenize here because spaces and tabs are important for code completion
-    # and word_tokenize ignores them
     chunked_pairs = []
     for text in tqdm(data, total=len(data)):
-        words = re.split(r"(\s+)", text)
-        if len(words) < MIN_CONTEXT_LENGTH + 1:
-            context, target = text.split(
-                "\n", 1
-            )  # here we are guaranteed to have at least one \n
-            chunked_pairs.append({"prompt": context + "\n", "completion": target + EOS_TOKEN})
-            continue
-
-        i = 0   
-        while i + MIN_CONTEXT_LENGTH + MIN_CONTEXT_LENGTH <= len(words):
-            # Set context
-            context = " ".join(words[i:i+MIN_CONTEXT_LENGTH])
-            
-            # Set target
-            target = " ".join(words[i+MIN_CONTEXT_LENGTH:i+MIN_CONTEXT_LENGTH+MIN_CONTEXT_LENGTH])
-            
-            # Yield the context and target
-            chunked_pairs.append({'prompt': context, 'completion': target + EOS_TOKEN})
-            
-            # Move the index forward by the context size for overlapping windows
-            # or by context_size + target_size for non-overlapping windows
-            i += MIN_CONTEXT_LENGTH
+        chunks = text_splitter.split_text(text)
+        for i in range(
+            len(chunks) - 1
+        ):  # Stop at the second to last chunk to ensure there is a completion for each prompt
+            prompt = chunks[i]
+            completion = chunks[i + 1]
+            chunked_pairs.append(
+                {"prompt": prompt, "completion": completion + EOS_TOKEN}
+            )
 
     return chunked_pairs
 
@@ -111,7 +117,8 @@ if __name__ == "__main__":
     print("Validation Dataset:", final_splits["validation"])
     print("Test Dataset:", final_splits["test"])
 
-    final_splits.save_to_disk(f"data/{OUTPUT_READY_DATASET_PATH}")
+    for split, split_dataset in final_splits.items():
+        split_dataset.to_json(f"data/{OUTPUT_READY_DATASET_PATH}/{split}.jsonl")
 
     # Example data point from training set
     print("Example data point:", final_splits["train"][0])
