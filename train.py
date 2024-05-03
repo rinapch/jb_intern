@@ -1,4 +1,4 @@
-from datasets import load_dataset, Dataset
+from datasets import load_dataset
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -8,7 +8,6 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from peft import LoraConfig, get_peft_model
-import os
 from config import DATASET_HF, PRETRAINED_MODEL
 import torch
 
@@ -81,7 +80,7 @@ tokenized_val = dataset["validation"].map(
 
 # Define training arguments
 training_args = TrainingArguments(
-    output_dir="./phi1.5-kotlin-finetune",  # output directory (model will have this name in HF hub)
+    output_dir="./phi1.5-kotlin",  # output directory (model will have this name in HF hub)
     num_train_epochs=1,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
