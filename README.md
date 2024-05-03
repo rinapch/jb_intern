@@ -68,11 +68,26 @@ Then run the script:
 python3 train.py
 ```
 
-This script tokenizes and prapares a datatset and lauches training with Huggingface API. 
+This script tokenizes and prapares a datatset and lauches training with Huggingface API.
 
-Since I'm GPU poor and needed to speed up the training, I used quantization with bitsandbytes and LoRA. The model was trained on a single RTX 4090 for approximately 4 hours. For this, I sampled 100k observations from the train file. The validation loss kept falling so it would be a good idea to keep training! 
+Since I'm GPU poor and needed to speed up the training, I used quantization with bitsandbytes and LoRA. The model was trained on a single RTX 4090 for approximately 4.5 hours. For this, I sampled 100k observations from the train file. The validation loss kept falling so it would be a good idea to keep training!
 
-Since we trained with LoRA, we need to merge the adapters into the corresponding layers:
+Since we trained with LoRA, we need to merge the adapters into the corresponding layers (this does not require GPU)):
 
+```
+python3 merge_lora.py --hf_repository <your_repo>
+```
+
+`<your_repo>` should be a repository with your training checkpoint. This script will upload the fully merged model to the same repository.
+
+The final model of my finetune run can be acessed at [rinapch/phi1.5-kotlin-finetune](https://huggingface.co/rinapch/phi1.5-kotlin-finetune/tree/main)
 
 ## Benchmarking
+
+I will report the same metrics as in [CodeXGLUE for Python](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/README.md#result): Edit similarity and BLUEscore. For benchmarking run:
+
+command will be here 
+
+BLUE calculation is copied directly from [CodeXGLUE repository](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/evaluator/bleu.py) (in the file `blue.py`). benchmarking.py follows the preprocessing steps from the same repo. It runs pretrained phi-1.5 and finetuned your_model on CodeXGLUE method generation benchmark as well as on the test set of the Kotlin dataset gathered in preprocess_data.py. It outputs a table with edit similarity and BLEU score between the two models.
+
+Here is the resulting table for my fintuned model:
