@@ -56,14 +56,23 @@ Running this script saves train, test and validation splits to `data/kotlin_prep
 
 ## Finetuning
 
-Done by running:
+Training script pushes the model to hub, so you need to authenticate:
+
+```
+huggingface-cli login
+```
+
+Then run the script:
 
 ```
 python3 train.py
 ```
 
-This script tokenizes and prapares a datatset and lauches training with Huggingface API. There is a prompt to login to Weights&Biases on the startup 
+This script tokenizes and prapares a datatset and lauches training with Huggingface API. 
 
-NB: tokenization part can take up to 20 minutes 
+Since I'm GPU poor and needed to speed up the training, I used quantization with bitsandbytes and LoRA. The model was trained on a single RTX 4090 for approximately 4 hours. For this, I sampled 100k observations from the train file. The validation loss kept falling so it would be a good idea to keep training! 
+
+Since we trained with LoRA, we need to merge the adapters into the corresponding layers:
+
 
 ## Benchmarking
