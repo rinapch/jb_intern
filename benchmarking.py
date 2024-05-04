@@ -7,6 +7,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from config import PRETRAINED_MODEL, DATASET_HF
 from datasets import load_dataset
+import jsonlines
 
 torch.set_default_device("cuda")
 
@@ -84,7 +85,8 @@ def main():
 
     logger.info("Loading CodeXGLUE method generation dataset")
 
-    codexglue = load_dataset("microsoft/codexglue_method_generation", split="test")
+    with jsonlines.open("data/test_codexglue.jsonl", mode="r") as reader:
+        codexglue = [line for line in reader]
     codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue)
 
     logger.info("Loading Kotlin test dataset")
