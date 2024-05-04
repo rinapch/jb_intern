@@ -5,7 +5,7 @@ Smooth BLEU is computed following the method outlined in the paper:
 Chin-Yew Lin, Franz Josef Och. ORANGE: a method for evaluating automatic
 evaluation metrics for machine translation. COLING 2004.
 
-This file is copied from:
+This file is almost directly copied from:
 https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/evaluator/bleu.py
 """
 
@@ -99,24 +99,12 @@ def compute_bleu(reference_corpus, translation_corpus, max_order=4,
 
   return (bleu, precisions, bp, ratio, translation_length, reference_length)
 
-
-def _bleu(ref_file, trans_file, subword_option=None):
+# rewrote this function to accept lists instead of file paths
+def _bleu(answers, predictions, subword_option=None):
     max_order = 4
     smooth = True
-    ref_files = [ref_file]
-    reference_text = []
-    for reference_filename in ref_files:
-        with open(reference_filename) as fh:
-            reference_text.append(fh.readlines())
-    per_segment_references = []
-    for references in zip(*reference_text):
-        reference_list = []
-        for reference in references:
-            reference_list.append(reference.strip().split())
-        per_segment_references.append(reference_list)
-    translations = []
-    with open(trans_file) as fh:
-        for line in fh:
-            translations.append(line.strip().split())
+
+    per_segment_references = [[ref.split()] for ref in answers]
+    translations = [cand.split() for cand in predictions]
     bleu_score, _, _, _, _, _ = compute_bleu(per_segment_references, translations, max_order, smooth)
     return round(100 * bleu_score,2)
