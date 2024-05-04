@@ -8,6 +8,7 @@ Just create a venv and install the requirements
 
 ```
 python3 -m venv jb_intern
+source jb_intern/bin/activate
 pip3 install -r requirements.txt
 ```
 
@@ -84,10 +85,12 @@ The final model of my finetune run can be acessed at [rinapch/phi1.5-kotlin-fine
 
 ## Benchmarking
 
-I will report the same metrics as in [CodeXGLUE for Python](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/README.md#result): Edit similarity and BLUEscore. For benchmarking run:
+I will report the same metrics as in [CodeXGLUE for Python](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/README.md#result): Edit similarity and BLEU score. For benchmarking run:
 
-command will be here 
+```
+python3 benchmarking.py --hf_repository <your_model>
+```
 
-BLUE calculation is copied directly from [CodeXGLUE repository](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/evaluator/bleu.py) (in the file `blue.py`). benchmarking.py follows the preprocessing steps from the same repo. It runs pretrained phi-1.5 and finetuned your_model on CodeXGLUE method generation benchmark as well as on the test set of the Kotlin dataset gathered in preprocess_data.py. It outputs a table with edit similarity and BLEU score between the two models.
+BLUE calculation is copied directly from [CodeXGLUE repository](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/evaluator/bleu.py) (in the file `bleu.py`). benchmarking.py follows the preprocessing steps from the same repo. It runs pretrained phi-1.5 and finetuned <`your_model>` on CodeXGLUE method generation benchmark as well as on the test set of the Kotlin dataset obtained from running `preprocess_data.py`. It outputs a table with edit similarity and BLEU score between the two models.
 
 Here is the resulting table for my fintuned model:
