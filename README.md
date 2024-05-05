@@ -101,7 +101,7 @@ BLUE calculation is copied directly from [CodeXGLUE repository](https://github.c
 
 NB: I am using a local file with CodeXGLUE test set (`data/test_codexglue.jsonl)`, because there is some problem with loading this data directly from Huggingface.
 
-`--sample` argument let's you sample some number of test examples from the two datasets because CodeXGLUE contains 20k obervations which can be quite large computationally. By default all of the obervations are used. It you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 500 observations from each data source
+`--sample` argument lets you sample some number of test examples from the two datasets because CodeXGLUE contains 20k obervations which can be quite large computationally. By default all of the obervations are used. If you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 500 observations from each data source
 
 Here is the resulting table for my finetuned model:
 
