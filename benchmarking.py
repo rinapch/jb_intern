@@ -61,7 +61,7 @@ def compute_scores(preds, answers):
         edit_sim += fuzz.ratio(pred, answ)
 
     bleu_score = round(_bleu(answers, preds), 2)
-    logger.info(f"Edit sim: {round(edit_sim/total, 2)}, BLEU: {bleu_score}")
+    return round(edit_sim/total, 2), bleu_score
 
 
 def prepare_codexglue_data(codexglue):
@@ -106,8 +106,11 @@ def main():
     predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
     predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
 
-    compute_scores(predictions_pretrained_codexglue, codexglue_answers)
-    compute_scores(predictions_pretrained_kotlin, kotlin_answers)
+    model_scores = {}
+    logger.info("Scoring CodeXGLUE")
+    model_scores["phi-1.5_scores_codexglue"] = compute_scores(predictions_pretrained_codexglue, codexglue_answers)
+    logger.info("Scoring Kotlin")
+    model_scores["phi-1.5_scores_kotlin"] = compute_scores(predictions_pretrained_kotlin, kotlin_answers)
 
     logger.info(f"Running predictions for the {args.hf_repository}")
     # redefining model variable to save GPU space 
@@ -116,8 +119,16 @@ def main():
     predictions_finetuned_codexglue = get_predictions(model, codexglue_prompts)
     predictions_finetuned_kotlin = get_predictions(model, kotlin_prompts)
 
-    compute_scores(predictions_finetuned_codexglue, codexglue_answers)
-    compute_scores(predictions_finetuned_kotlin, kotlin_answers)
+    logger.info("Scoring CodeXGLUE")
+    model_scores["finetuned_model_scores_codexglue"] = compute_scores(predictions_finetuned_codexglue, codexglue_answers)
+    logger.info("Scoring Kotlin")
+    model_scores["finetuned_model_scores_kotlin"] = compute_scores(predictions_finetuned_kotlin, kotlin_answers)
+
+        # Print results in Markdown table format
+    print("| Model                        | Edit Dist CodexGLUE | BLEU CodeXGLUE | Edit Dist Kotlin | BLEU Kotlin |")
+    print("|------------------------------|---------------------|----------------|------------------|-------------|")
+    print(f"| phi-1.5                     | {model_scores['phi-1.5_scores_codexglue'][0]} | {model_scores['phi-1.5_scores_codexglue'][1]} | {model_scores['phi-1.5_scores_kotlin'][0]} | {model_scores['phi-1.5_scores_kotlin'][1]} |")
+    print(f"| {args.hf_repository} | {model_scores['finetuned_model_scores_codexglue'][0]} | {model_scores['finetuned_model_scores_codexglue'][1]} | {model_scores['finetuned_model_scores_kotlin'][0]} | {model_scores['finetuned_model_scores_kotlin'][1]} |")
 
 
 if __name__ == "__main__":
