@@ -4,15 +4,23 @@ from fuzzywuzzy import fuzz
 import re
 from bleu import _bleu
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from config import PRETRAINED_MODEL, DATASET_HF
 from datasets import load_dataset
 import jsonlines
 from tqdm import tqdm
 
+
 torch.set_default_device("cuda")
 
 tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.float16,
+)
 
 
 def get_predictions(model, prompts):
@@ -96,7 +104,7 @@ def main():
     kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin)
 
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
-    model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
+    model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto", quantization_config=bnb_config)
 
     predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
     predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
@@ -106,7 +114,7 @@ def main():
 
     logger.info(f"Running predictions for the {args.hf_repository}")
     # redefining model variable to save GPU space 
-    model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto")
+    model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto", quantization_config=bnb_config)
 
     predictions_finetuned_codexglue = get_predictions(model, codexglue_prompts)
     predictions_finetuned_kotlin = get_predictions(model, kotlin_prompts)
