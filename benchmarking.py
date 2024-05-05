@@ -19,7 +19,7 @@ def get_predictions(model, prompts):
     for prompt in prompts:
         inputs = tokenizer(prompt, return_tensors="pt", return_attention_mask=False)
 
-        outputs = model.generate(**inputs, max_length=200)
+        outputs = model.generate(**inputs, max_new_tokens=512)
         text = tokenizer.batch_decode(outputs)[0]
         predictions.append(post_process(text))
 
