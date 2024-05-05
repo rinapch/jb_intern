@@ -13,8 +13,7 @@ from tqdm import tqdm
 torch.set_default_device("cuda")
 
 tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
-
-
+tokenizer.pad_token = tokenizer.eos_token
 
 def get_predictions(model, prompts):
     predictions = []
