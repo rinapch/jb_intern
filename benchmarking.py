@@ -77,11 +77,11 @@ def prepare_codexglue_data(codexglue):
 def prepare_kotlin_data(codexglue):
     prompts = []
     answers = []
-    for sample in codexglue.sample(100):
+    for sample in codexglue:
         prompts.append(sample["prompt"])
         answers.append(sample["completion"])
 
-    return prompts, answers
+    return prompts[:100], answers[:100]
 
 
 def main():
