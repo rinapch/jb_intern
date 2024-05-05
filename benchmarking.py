@@ -8,6 +8,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from config import PRETRAINED_MODEL, DATASET_HF
 from datasets import load_dataset
 import jsonlines
+from tqdm import tqdm
 
 torch.set_default_device("cuda")
 
@@ -49,9 +50,9 @@ def post_process(code):
 def compute_scores(preds, answers):
     total = len(answers)
     edit_sim = 0.0
-    for pred, answ in zip(preds, answers):
+    for pred, answ in tqdm(zip(preds, answers), total=total):
         pred = post_process(pred.strip())
-        gt = post_process(answ.strip())
+        answ = post_process(answ.strip())
         edit_sim += fuzz.ratio(pred, answ)
 
     bleu_score = round(_bleu(answers, preds), 2)
