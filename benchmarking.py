@@ -19,7 +19,7 @@ def get_predictions(model, prompts):
     predictions = []
     for i in tqdm(range(0, len(prompts), 4), desc="Generating predictions", total=len(prompts)//4):
         batch_prompts = prompts[i:i+4]
-        inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True, max_new_tokens=512)
+        inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True, max_length=512)
         inputs = {key: val.to(torch.device('cuda')) for key, val in inputs.items()}
         
         with torch.no_grad():  # Disable gradients for prediction
