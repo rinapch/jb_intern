@@ -16,7 +16,7 @@ tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
 tokenizer.pad_token = tokenizer.eos_token
 
 
-def get_predictions(model, prompts, batch_size=4):
+def get_predictions(model, prompts, batch_size=10):
     """Generate predictions for a list of prompts using a given model."""
     predictions = []
     for i in tqdm(
