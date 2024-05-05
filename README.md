@@ -42,7 +42,7 @@ Preprocessing includes the following steps:
 
 Phi models do not use special tokens such as `<EOL>` or `<INDENT>`, so there is no need to paste them
 
-As for the format of the final dataset, I've decided to construct it using chunking a small sliding window. The reasons for choosing this format are the following:
+As for the format of the final dataset, I've decided to construct it using chunking with a small sliding window. The reasons for choosing this format are the following:
 
 - Phi-1.5 is a small model, and its training data contains a lot of textbook Python tasks. This suggests that the finetuning data should be short-form: instead of predicting a large code chunk, we should stick to completing only a few lines at a time (e.g. a short method or function)
 - The same goes for the suggested benchmark [CodeXGLUE Python](https://huggingface.co/datasets/microsoft/codexglue_method_generation) – the prompt there is always a function definition, and the reponse is a few-line solution, so I decided to organise my dataset in a similar way length-wise
@@ -97,11 +97,11 @@ I will report the same metrics as in [CodeXGLUE for Python](https://github.com/m
 python3 benchmarking.py --hf_repository <your_model> --sample <num>
 ```
 
-BLUE calculation is copied directly from [CodeXGLUE repository](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/evaluator/bleu.py) (it's in the file `bleu.py`). `benchmarking.py` follows the postprocessing steps from the same repo. It runs pretrained Phi-1.5 and finetuned <`your_model>` on CodeXGLUE method generation benchmark as well as on the test part of the Kotlin dataset obtained from running `preprocess_data.py`
+BLUE calculation is copied directly from [CodeXGLUE repository](https://github.com/microsoft/CodeXGLUE/blob/main/Code-Code/Method-Generation/evaluator/bleu.py) (it's in the file `bleu.py`). `benchmarking.py` follows the postprocessing steps from the same repo. It runs pretrained Phi-1.5 and finetuned `<your_model>` on CodeXGLUE method generation benchmark as well as on the test part of the Kotlin dataset obtained from running `preprocess_data.py`
 
 NB: I am using a local file with CodeXGLUE test set (`data/test_codexglue.jsonl)`, because there is some problem with loading this data directly from Huggingface.
 
-`--sample` argument let's you sample some number of test samples from two datasets because CodeXGLUE contains 20k obervations. By default all of the obervations are used. It you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 500 observations from each data source
+`--sample` argument let's you sample some number of test examples from the two datasets because CodeXGLUE contains 20k obervations which can be quite large computationally. By default all of the obervations are used. It you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 500 observations from each data source
 
 Here is the resulting table for my fintuned model:
 
