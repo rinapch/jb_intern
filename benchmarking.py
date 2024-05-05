@@ -16,7 +16,7 @@ tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
 tokenizer.pad_token = tokenizer.eos_token
 
 
-def get_predictions(model, prompts, batch_size=10):
+def get_predictions(model, prompts, batch_size=4):
     """Generate predictions for a list of prompts using a given model."""
     predictions = []
     for i in tqdm(
@@ -89,10 +89,9 @@ def prepare_codexglue_data(codexglue, sample_num):
     for sample in codexglue:
         prompt = format_codexglue_prompt(sample["signature"], sample["docstring"])
         prompts.append(prompt)
-        answers.append(sample["docstring"])
-    if (
-        sample_num != "all"
-    ):  # if sample is not all, return only the first `sample_num` samples
+        answers.append(sample["body"])
+    if sample_num is not None:
+        # if sample is not all, return only the first `sample_num` samples
         return prompts[:sample_num], answers[:sample_num]
     return prompts, answers
 
@@ -105,9 +104,8 @@ def prepare_kotlin_data(codexglue, sample_num):
         prompts.append(sample["prompt"])
         answers.append(sample["completion"])
 
-    if (
-        sample_num != "all"
-    ):  # if sample is not all, return only the first `sample_num` samples
+    if sample_num is not None:
+        # if sample is not all, return only the first `sample_num` samples
         return prompts[:sample_num], answers[:sample_num]
     return prompts, answers
 
@@ -125,12 +123,12 @@ def main():
     parser.add_argument(
         "--sample",
         type=str,
-        default="all",
+        default=None,
         required=False,
         help="How many samples to evaluate. Default is all.",
     )
     args = parser.parse_args()
-    num_samples = int(args.sample) if args.sample != "all" else args.sample
+    num_samples = int(args.sample) if args.sample else args.sample
 
     logger.info("Loading CodeXGLUE method generation dataset")
 
@@ -146,19 +144,7 @@ def main():
     kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin, num_samples)
 
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
-    model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
-
-    # redefining model variable to save GPU space
     model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto")
-
-    predictions_finetuned_codexglue = get_predictions(model, codexglue_prompts)
-    predictions_finetuned_kotlin = get_predictions(model, kotlin_prompts)
-
-    logger.info("Scoring CodeXGLUE")
-    compute_scores(predictions_finetuned_codexglue, codexglue_answers)
-    logger.info("Scoring Kotlin")
-    compute_scores(predictions_finetuned_kotlin, kotlin_answers)
-
 
     predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
     predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
@@ -169,6 +155,16 @@ def main():
     compute_scores(predictions_pretrained_kotlin, kotlin_answers)
 
     logger.info(f"Running predictions for the {args.hf_repository}")
+    # redefining model variable to save GPU space
+    model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto")
+
+    predictions_finetuned_codexglue = get_predictions(model, codexglue_prompts)
+    predictions_finetuned_kotlin = get_predictions(model, kotlin_prompts)
+
+    logger.info("Scoring CodeXGLUE")
+    compute_scores(predictions_finetuned_codexglue, codexglue_answers)
+    logger.info("Scoring Kotlin")
+    compute_scores(predictions_finetuned_kotlin, kotlin_answers)
 
 
 if __name__ == "__main__":
