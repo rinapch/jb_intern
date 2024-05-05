@@ -144,7 +144,7 @@ def main():
     kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin, num_samples)
 
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
-    model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto")
+    model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
 
     predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
     predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
