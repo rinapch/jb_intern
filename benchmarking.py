@@ -119,17 +119,18 @@ def main():
     parser.add_argument('--hf_repository', type=str, required=True, help='Hugging Face repository of the finetuned Phi-1.5 model.')
     parser.add_argument('--sample', type=str, default="all", required=False, help='How many samples to evaluate. Default is all.')
     args = parser.parse_args()
+    num_samples = int(args.sample) if args.sample != "all" else args.sample
 
     logger.info("Loading CodeXGLUE method generation dataset")
 
     with jsonlines.open("data/test_codexglue.jsonl", mode="r") as reader:
         codexglue = [line for line in reader]
-    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue, args.sample)
+    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue, num_samples)
 
     logger.info("Loading Kotlin test dataset")
 
     kotlin = load_dataset(DATASET_HF, split="test")
-    kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin, args.sample)
+    kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin, num_samples)
 
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
     model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
