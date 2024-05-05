@@ -77,7 +77,7 @@ def prepare_codexglue_data(codexglue):
 def prepare_kotlin_data(codexglue):
     prompts = []
     answers = []
-    for sample in codexglue:
+    for sample in codexglue.sample(100):
         prompts.append(sample["prompt"])
         answers.append(sample["completion"])
 
