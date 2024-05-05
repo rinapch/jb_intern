@@ -148,16 +148,6 @@ def main():
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
     model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
 
-    predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
-    predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
-
-    model_scores = {}
-    logger.info("Scoring CodeXGLUE")
-    compute_scores(predictions_pretrained_codexglue, codexglue_answers)
-    logger.info("Scoring Kotlin")
-    compute_scores(predictions_pretrained_kotlin, kotlin_answers)
-
-    logger.info(f"Running predictions for the {args.hf_repository}")
     # redefining model variable to save GPU space
     model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto")
 
@@ -168,6 +158,17 @@ def main():
     compute_scores(predictions_finetuned_codexglue, codexglue_answers)
     logger.info("Scoring Kotlin")
     compute_scores(predictions_finetuned_kotlin, kotlin_answers)
+
+
+    predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
+    predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
+
+    logger.info("Scoring CodeXGLUE")
+    compute_scores(predictions_pretrained_codexglue, codexglue_answers)
+    logger.info("Scoring Kotlin")
+    compute_scores(predictions_pretrained_kotlin, kotlin_answers)
+
+    logger.info(f"Running predictions for the {args.hf_repository}")
 
 
 if __name__ == "__main__":
