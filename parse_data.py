@@ -9,7 +9,8 @@ from config import REPO_URL, TMP_KOTLIN_REPO_PATH, OUTPUT_RAW_FILE
 def clone_repository(url, clone_path):
     """Clones a git repository from GitHub to a local path
     Cloning the repositiry instead of fetching inividual files with Github API
-    was chosen, because it is faster and eliminates the need to account for request limits."""
+    was chosen, because it is faster and eliminates the need to account for request limits.
+    """
     subprocess.run(["git", "clone", url, clone_path], check=True)
 
 

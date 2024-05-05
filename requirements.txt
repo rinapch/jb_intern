@@ -2,7 +2,6 @@ jsonlines==4.0.0
 tqdm==4.66.2
 loguru==0.7.2
 datasets==2.19.0
-tqdm==4.66.2
 transformers==4.40.1
 langchain-text-splitters==0.0.1
 torch==2.2.2

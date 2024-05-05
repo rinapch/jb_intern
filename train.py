@@ -43,6 +43,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 model = get_peft_model(model, lora_config)
 
+
 # Helper function for attention_map
 def calculate_length_in_tokens(text, tokenizer):
     return tokenizer(text, return_length=True)["length"][0]
