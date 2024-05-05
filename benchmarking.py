@@ -77,7 +77,7 @@ def compute_scores(preds, answers):
         edit_sim += fuzz.ratio(pred, answ)
 
     bleu_score = round(_bleu(answers, preds), 2)
-    return round(edit_sim / total, 2), bleu_score
+    logger.info(f"Edit sim {round(edit_sim / total, 2)}, BLEU {bleu_score}")
 
 
 def prepare_codexglue_data(codexglue, sample_num):
@@ -106,46 +106,6 @@ def prepare_kotlin_data(codexglue, sample_num):
     ):  # if sample is not all, return only the first `sample_num` samples
         return prompts[:sample_num], answers[:sample_num]
     return prompts, answers
-
-
-def print_aligned_markdown_table(model_scores, args):
-    # Header names
-    headers = [
-        "Model",
-        "Edit Dist CodexGLUE",
-        "BLEU CodeXGLUE",
-        "Edit Dist Kotlin",
-        "BLEU Kotlin",
-    ]
-
-    # Determine the maximum width for each column
-    max_width = [len(header) for header in headers]
-    for model_name, scores in model_scores.items():
-        max_width[0] = max(max_width[0], len(model_name))
-        for i, score in enumerate(scores, start=1):
-            score_length = len(
-                f"{score:.2f}"
-            )  # Convert float to string with 2 decimal places
-            max_width[i] = max(max_width[i], score_length)
-
-    # Helper to format each row entry to ensure proper alignment
-    def format_row(items, widths):
-        return " | ".join(
-            f"{item}{' ' * (width - len(str(item)))}"
-            for item, width in zip(items, widths)
-        )
-
-    # Print the header
-    print(format_row(headers, max_width))
-    print("|" + "|".join("-" * width for width in max_width) + "|")
-
-    # Print each model's scores
-    model_names = ["phi-1.5", args.hf_repository]
-    for model_name, scores in zip(model_names, model_scores.values()):
-        formatted_scores = [
-            f"{score:.2f}" for score in scores
-        ]  # Format scores to two decimal places
-        print(format_row([model_name] + formatted_scores, max_width))
 
 
 def main():
@@ -189,13 +149,9 @@ def main():
 
     model_scores = {}
     logger.info("Scoring CodeXGLUE")
-    model_scores["phi-1.5_scores_codexglue"] = compute_scores(
-        predictions_pretrained_codexglue, codexglue_answers
-    )
+    compute_scores(predictions_pretrained_codexglue, codexglue_answers)
     logger.info("Scoring Kotlin")
-    model_scores["phi-1.5_scores_kotlin"] = compute_scores(
-        predictions_pretrained_kotlin, kotlin_answers
-    )
+    compute_scores(predictions_pretrained_kotlin, kotlin_answers)
 
     logger.info(f"Running predictions for the {args.hf_repository}")
     # redefining model variable to save GPU space
@@ -205,15 +161,9 @@ def main():
     predictions_finetuned_kotlin = get_predictions(model, kotlin_prompts)
 
     logger.info("Scoring CodeXGLUE")
-    model_scores["finetuned_model_scores_codexglue"] = compute_scores(
-        predictions_finetuned_codexglue, codexglue_answers
-    )
+    compute_scores(predictions_finetuned_codexglue, codexglue_answers)
     logger.info("Scoring Kotlin")
-    model_scores["finetuned_model_scores_kotlin"] = compute_scores(
-        predictions_finetuned_kotlin, kotlin_answers
-    )
-
-    print_aligned_markdown_table(model_scores, args)
+    compute_scores(predictions_finetuned_kotlin, kotlin_answers)
 
 
 if __name__ == "__main__":
