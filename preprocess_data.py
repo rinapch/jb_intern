@@ -53,7 +53,7 @@ def _is_long_sample(text: str) -> bool:
 
 
 def _contains_long_values(text: str) -> bool:
-    # Pattern matches any sequence of digits longer than 40 or non-space characters longer than 100
+    # Pattern matches any sequence of digits longer than 40 or non-space characters longer than 200
     pattern = re.compile(r"(\d{40,})|([^\s]{200,})")
 
     if pattern.search(text):

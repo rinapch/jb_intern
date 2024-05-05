@@ -32,7 +32,7 @@ Done by running:
 python3 preprocess_data.py
 ```
 
-After collecting the files, we need to clean the data and build an actual code complletion dataset.
+After collecting the files, we need to clean the data and build an actual code completion dataset.
 
 Preprocessing includes the following steps:
 
@@ -103,16 +103,16 @@ NB: I am using a local file with CodeXGLUE test set (`data/test_codexglue.jsonl)
 
 `--sample` argument let's you sample some number of test examples from the two datasets because CodeXGLUE contains 20k obervations which can be quite large computationally. By default all of the obervations are used. It you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 500 observations from each data source
 
-Here is the resulting table for my fintuned model:
+Here is the resulting table for my finetuned model:
 
 | Model                          | CodeXGLUE edit sim | CodeXGLUE BLEU | Kotlin edit sim | Kotlin BLEU |
 | ------------------------------ | ------------------ | -------------- | --------------- | ----------- |
 | microsoft/phi-1_5              | 12.98              | 10.98          | 6.53            | 1.71        |
 | rinapch/phi1.5-kotlin-finetune | 14.02              | 10.71          | 7.51            | 2.12        |
 
-The increase isn't much, but it's honest work 🤠 
+The increase isn't much, but it's honest work 🤠
 
-To improve the model, I would 
+To improve the model, I would
 
 * Train on the whole train set (it would take approximately 13 hrs)
 * Gather textbook and generally instruct-style data or produce it synthetically from a bigger model

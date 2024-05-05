@@ -17,6 +17,7 @@ tokenizer.pad_token = tokenizer.eos_token
 
 
 def get_predictions(model, prompts, batch_size=4):
+    """Generate predictions for a list of prompts using a given model."""
     predictions = []
     for i in tqdm(
         range(0, len(prompts), batch_size),
@@ -69,6 +70,7 @@ def post_process(code):
 
 
 def compute_scores(preds, answers):
+    """Compute BLEU and edit similarity scores for a list of predictions and answers."""
     total = len(answers)
     edit_sim = 0.0
     for pred, answ in tqdm(zip(preds, answers), total=total):
@@ -81,6 +83,7 @@ def compute_scores(preds, answers):
 
 
 def prepare_codexglue_data(codexglue, sample_num):
+    """Prepare the CodeXGLUE data for evaluation. Select set number of samples."""
     prompts = []
     answers = []
     for sample in codexglue:
@@ -95,6 +98,7 @@ def prepare_codexglue_data(codexglue, sample_num):
 
 
 def prepare_kotlin_data(codexglue, sample_num):
+    """Prepare the Kotlin data for evaluation. Select set number of samples."""
     prompts = []
     answers = []
     for sample in codexglue:

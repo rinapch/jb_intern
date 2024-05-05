@@ -40,24 +40,19 @@ def save_data(data, file_name):
 
 
 def main():
-    # Clone the repository
-    logger.info("Cloning repository (it's big to it might take a while)...")
+    logger.info("Cloning repository (it's big so it might take a while)...")
     clone_repository(REPO_URL, TMP_KOTLIN_REPO_PATH)
 
-    # Process the Kotlin files
     logger.info("Processing Kotlin files...")
     dataset = extract_kotlin_files(TMP_KOTLIN_REPO_PATH)
 
-    # Output some information about the dataset
     logger.info(f"Found {len(dataset)} Kotlin files.")
 
     save_data(dataset, OUTPUT_RAW_FILE)
 
-    # Clean up: remove the cloned repository to save space
     logger.info("Cleaning up: removing cloned repository...")
     remove_directory(TMP_KOTLIN_REPO_PATH)
 
-    # Output completion message
     logger.info("Process completed. Repository removed to save space.")
 
 

@@ -94,7 +94,7 @@ training_args = TrainingArguments(
     do_eval=True,
     evaluation_strategy="steps",
     push_to_hub=True,
-    hub_strategy="checkpoint",  # last_checkpint will be saved in the hub so we could contrunie training from it
+    hub_strategy="checkpoint",  # last_checkpint will be saved in the hub so we could continue training from it
 )
 
 trainer = Trainer(
