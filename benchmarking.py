@@ -64,24 +64,27 @@ def compute_scores(preds, answers):
     return round(edit_sim/total, 2), bleu_score
 
 
-def prepare_codexglue_data(codexglue):
+def prepare_codexglue_data(codexglue, sample_num):
     prompts = []
     answers = []
     for sample in codexglue:
         prompt = format_codexglue_prompt(sample["signature"], sample["docstring"])
         prompts.append(prompt)
         answers.append(sample["docstring"])
-
+    if sample_num != "all": # if sample is not all, return only the first `sample_num` samples
+        return prompts[:sample_num], answers[:sample_num]
     return prompts, answers
 
-def prepare_kotlin_data(codexglue):
+def prepare_kotlin_data(codexglue, sample_num):
     prompts = []
     answers = []
     for sample in codexglue:
         prompts.append(sample["prompt"])
         answers.append(sample["completion"])
 
-    return prompts[:1000], answers[:1000]
+    if sample_num != "all": # if sample is not all, return only the first `sample_num` samples
+        return prompts[:sample_num], answers[:sample_num]
+    return prompts, answers
 
 
 def print_aligned_markdown_table(model_scores, args):
@@ -114,18 +117,19 @@ def print_aligned_markdown_table(model_scores, args):
 def main():
     parser = argparse.ArgumentParser(description='Evaluate leaderboard predictions for code completion (line level).')
     parser.add_argument('--hf_repository', type=str, required=True, help='Hugging Face repository of the finetuned Phi-1.5 model.')
+    parser.add_argument('--sample', type=str, default="all", required=False, help='How many samples to evaluate. Default is all.')
     args = parser.parse_args()
 
     logger.info("Loading CodeXGLUE method generation dataset")
 
     with jsonlines.open("data/test_codexglue.jsonl", mode="r") as reader:
         codexglue = [line for line in reader]
-    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue[:1000])
+    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue, args.sample)
 
     logger.info("Loading Kotlin test dataset")
 
     kotlin = load_dataset(DATASET_HF, split="test")
-    kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin)
+    kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin, args.sample)
 
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
     model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
