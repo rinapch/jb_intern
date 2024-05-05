@@ -15,9 +15,9 @@ torch.set_default_device("cuda")
 tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
 tokenizer.pad_token = tokenizer.eos_token
 
-def get_predictions(model, prompts):
+def get_predictions(model, prompts, batch_size=4):
     predictions = []
-    for i in tqdm(range(0, len(prompts), 4), desc="Generating predictions", total=len(prompts)//4):
+    for i in tqdm(range(0, len(prompts), batch_size), desc="Generating predictions", total=len(prompts)//batch_size):
         batch_prompts = prompts[i:i+4]
         inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True, max_length=512)
         inputs = {key: val.to(torch.device('cuda')) for key, val in inputs.items()}
@@ -81,7 +81,34 @@ def prepare_kotlin_data(codexglue):
         prompts.append(sample["prompt"])
         answers.append(sample["completion"])
 
-    return prompts[:100], answers[:100]
+    return prompts[:1000], answers[:1000]
+
+
+def print_aligned_markdown_table(model_scores, args):
+    # Header names
+    headers = ["Model", "Edit Dist CodexGLUE", "BLEU CodeXGLUE", "Edit Dist Kotlin", "BLEU Kotlin"]
+    
+    # Determine the maximum width for each column
+    max_width = [len(header) for header in headers]
+    for model_name, scores in model_scores.items():
+        max_width[0] = max(max_width[0], len(model_name))
+        for i, score in enumerate(scores, start=1):
+            score_length = len(f"{score:.2f}")  # Convert float to string with 2 decimal places
+            max_width[i] = max(max_width[i], score_length)
+
+    # Helper to format each row entry to ensure proper alignment
+    def format_row(items, widths):
+        return " | ".join(f"{item}{' ' * (width - len(str(item)))}" for item, width in zip(items, widths))
+    
+    # Print the header
+    print(format_row(headers, max_width))
+    print("|" + "|".join("-" * width for width in max_width) + "|")
+    
+    # Print each model's scores
+    model_names = ["phi-1.5", args.hf_repository]
+    for model_name, scores in zip(model_names, model_scores.values()):
+        formatted_scores = [f"{score:.2f}" for score in scores]  # Format scores to two decimal places
+        print(format_row([model_name] + formatted_scores, max_width))
 
 
 def main():
@@ -93,7 +120,7 @@ def main():
 
     with jsonlines.open("data/test_codexglue.jsonl", mode="r") as reader:
         codexglue = [line for line in reader]
-    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue[:100])
+    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue[:1000])
 
     logger.info("Loading Kotlin test dataset")
 
@@ -124,12 +151,7 @@ def main():
     logger.info("Scoring Kotlin")
     model_scores["finetuned_model_scores_kotlin"] = compute_scores(predictions_finetuned_kotlin, kotlin_answers)
 
-        # Print results in Markdown table format
-    print("| Model                        | Edit Dist CodexGLUE | BLEU CodeXGLUE | Edit Dist Kotlin | BLEU Kotlin |")
-    print("|------------------------------|---------------------|----------------|------------------|-------------|")
-    print(f"| phi-1.5                     | {model_scores['phi-1.5_scores_codexglue'][0]} | {model_scores['phi-1.5_scores_codexglue'][1]} | {model_scores['phi-1.5_scores_kotlin'][0]} | {model_scores['phi-1.5_scores_kotlin'][1]} |")
-    print(f"| {args.hf_repository} | {model_scores['finetuned_model_scores_codexglue'][0]} | {model_scores['finetuned_model_scores_codexglue'][1]} | {model_scores['finetuned_model_scores_kotlin'][0]} | {model_scores['finetuned_model_scores_kotlin'][1]} |")
-
+    print_aligned_markdown_table(model_scores, args)
 
 if __name__ == "__main__":
     main()
