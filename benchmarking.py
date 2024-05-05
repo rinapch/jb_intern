@@ -4,34 +4,32 @@ from fuzzywuzzy import fuzz
 import re
 from bleu import _bleu
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from config import PRETRAINED_MODEL, DATASET_HF
 from datasets import load_dataset
 import jsonlines
 from tqdm import tqdm
 
-
 torch.set_default_device("cuda")
 
 tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
 
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-)
 
 
 def get_predictions(model, prompts):
     predictions = []
-    for prompt in tqdm(prompts, total=len(prompts)):
-        inputs = tokenizer(prompt, return_tensors="pt", return_attention_mask=False)
-
-        outputs = model.generate(**inputs, max_new_tokens=512)
-        text = tokenizer.batch_decode(outputs)[0]
-        predictions.append(post_process(text))
-
+    for i in tqdm(range(0, len(prompts), 4), desc="Generating predictions", total=len(prompts)//4):
+        batch_prompts = prompts[i:i+4]
+        inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True, max_new_tokens=512)
+        inputs = {key: val.to(torch.device('cuda')) for key, val in inputs.items()}
+        
+        with torch.no_grad():  # Disable gradients for prediction
+            outputs = model.generate(**inputs, max_new_tokens=512)
+        
+        decoded_outputs = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        postprocessed_outputs = [post_process(output) for output in decoded_outputs]
+        predictions.extend(postprocessed_outputs)
+        
     return predictions
         
 
@@ -96,7 +94,7 @@ def main():
 
     with jsonlines.open("data/test_codexglue.jsonl", mode="r") as reader:
         codexglue = [line for line in reader]
-    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue)
+    codexglue_prompts, codexglue_answers = prepare_codexglue_data(codexglue[:100])
 
     logger.info("Loading Kotlin test dataset")
 
@@ -104,7 +102,7 @@ def main():
     kotlin_prompts, kotlin_answers = prepare_kotlin_data(kotlin)
 
     logger.info(f"Running predictions for the {PRETRAINED_MODEL}")
-    model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto", quantization_config=bnb_config)
+    model = AutoModelForCausalLM.from_pretrained(PRETRAINED_MODEL, torch_dtype="auto")
 
     predictions_pretrained_codexglue = get_predictions(model, codexglue_prompts)
     predictions_pretrained_kotlin = get_predictions(model, kotlin_prompts)
@@ -114,7 +112,7 @@ def main():
 
     logger.info(f"Running predictions for the {args.hf_repository}")
     # redefining model variable to save GPU space 
-    model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto", quantization_config=bnb_config)
+    model = AutoModelForCausalLM.from_pretrained(args.hf_repository, torch_dtype="auto")
 
     predictions_finetuned_codexglue = get_predictions(model, codexglue_prompts)
     predictions_finetuned_kotlin = get_predictions(model, kotlin_prompts)
