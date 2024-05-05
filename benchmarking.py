@@ -17,7 +17,7 @@ tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL)
 
 def get_predictions(model, prompts):
     predictions = []
-    for prompt in prompts:
+    for prompt in tqdm(prompts, total=len(prompts)):
         inputs = tokenizer(prompt, return_tensors="pt", return_attention_mask=False)
 
         outputs = model.generate(**inputs, max_new_tokens=512)
