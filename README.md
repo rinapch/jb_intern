@@ -101,14 +101,14 @@ BLUE calculation is copied directly from [CodeXGLUE repository](https://github.c
 
 NB: I am using a local file with CodeXGLUE test set (`data/test_codexglue.jsonl)`, because there is some problem with loading this data directly from Huggingface.
 
-`--sample` argument lets you sample some number of test examples from the two datasets because CodeXGLUE contains 20k obervations which can be quite large computationally. By default all of the obervations are used. If you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 500 observations from each data source
+`--sample` argument lets you sample some number of test examples from the two datasets because CodeXGLUE contains 20k obervations which can be quite large computationally. By default all of the obervations are used. If you set more samples than there are in the dataset, it will also evaluate on the whole dataset. Since I'm still GPU poor, I used 100 observations from each data source
 
 Here is the resulting table for my finetuned model:
 
 | Model                          | CodeXGLUE edit sim | CodeXGLUE BLEU | Kotlin edit sim | Kotlin BLEU |
 | ------------------------------ | ------------------ | -------------- | --------------- | ----------- |
-| microsoft/phi-1_5              | 12.98              | 10.98          | 6.53            | 1.71        |
-| rinapch/phi1.5-kotlin-finetune | 14.02              | 10.71          | 7.51            | 2.12        |
+| microsoft/phi-1_5              | 3.55               | 0.05           | 6.53            | 1.71        |
+| rinapch/phi1.5-kotlin-finetune | 3.13               | 0.03           | 7.51            | 2.12        |
 
 The increase isn't much, but it's honest work 🤠
 
@@ -116,3 +116,4 @@ To improve the model, I would
 
 * Train on the whole train set (it would take approximately 13 hrs)
 * Gather textbook and generally instruct-style data or produce it synthetically from a bigger model
+* Train on the mixture of languages to maintain them on approximately the same level

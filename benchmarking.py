@@ -122,13 +122,13 @@ def main():
     )
     parser.add_argument(
         "--sample",
-        type=str,
+        type=int,
         default=None,
         required=False,
-        help="How many samples to evaluate. Default is all.",
+        help="How many samples to evaluate. If not provided, will use all samples.",
     )
     args = parser.parse_args()
-    num_samples = int(args.sample) if args.sample else args.sample
+    num_samples = int(args.sample) if args.sample is not None else args.sample
 
     logger.info("Loading CodeXGLUE method generation dataset")
 
